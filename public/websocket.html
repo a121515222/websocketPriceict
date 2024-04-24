@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <ul id="list"></ul>
+  <input type="text" id="message">
+  <button type="button" id="sendBtn">送出</button>
+  <p>uuid: <span id="uuid"></span></p>
+  <script>
+    const host = 'ws://localhost:3000/ws'
+    const inputMessage = document.querySelector('#message')
+    const spanUUID = document.querySelector('#uuid')
+    const ulList = document.querySelector('#list')
+    const btnSend = document.querySelector('#sendBtn')
+    // 向後端建立ws連線
+    const ws = new WebSocket(host)
+    ws.onopen = (res) => {
+      console.log('open', res)
+    }
+
+    let id=""
+    const messageList = [];
+    //接收來自後端的訊息，再依據context判斷是uuid還是message，再做對應的處理
+    ws.onmessage = (res)=>{
+      const data = JSON.parse(res.data)
+      console.log('onmessage', data)
+        
+      if(data.context === 'message'){
+        messageList.push(data.message)
+        ulList.innerHTML = messageList.map((message) => `<li>${message}</li>`).join('')
+      } else{
+        spanUUID.innerHTML = data.id
+        id = data.id
+      }
+    }
+    // 發送訊息給後端
+    btnSend.addEventListener('click', () => {
+      const message = inputMessage.value
+      ws.send(JSON.stringify({context: 'message', message,id}))
+    })
+    
+
+
+  </script>
+</body>
+</html>
